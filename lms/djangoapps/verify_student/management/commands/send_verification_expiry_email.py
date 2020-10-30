@@ -35,12 +35,12 @@ class Command(BaseCommand):
     """
     This command sends email to learners for which the Software Secure Photo Verification has expired
 
-    The expiry email is sent when the date represented by SoftwareSecurePhotoVerification's field `expiry_date`
+    The expiry email is sent when the date represented by SoftwareSecurePhotoVerification's field `expiration_datetime`
     lies within the date range provided by command arguments. If the email is already sent indicated by field
     `expiry_email_date` then filter if the specified number of days given in settings as
     VERIFICATION_EXPIRY_EMAIL['RESEND_DAYS'] have passed since the last email.
 
-    Since a user can have multiple verification all the previous verifications have expiry_date and expiry_email_date
+    Since a user can have multiple verification all the previous verifications have expiry_email_date
     set to None so that they are not filtered. See lms/djangoapps/verify_student/views.py:1174
 
     The range to filter expired verification is selected based on VERIFICATION_EXPIRY_EMAIL['DAYS_RANGE']. This
@@ -102,9 +102,8 @@ class Command(BaseCommand):
 
         # Adding an order_by() clause will override the class meta ordering as we don't need ordering here
         query = SoftwareSecurePhotoVerification.objects.filter(Q(status='approved') &
-                                                               Q(expiry_date__isnull=False) &
-                                                               (Q(expiry_date__gte=start_date,
-                                                                  expiry_date__lt=end_date) |
+                                                               (Q(expiration_datetime__gte=start_date,
+                                                                  expiration_datetime__lt=end_date) |
                                                                 Q(expiry_email_date__lte=date_resend_days_ago)
                                                                 )).order_by()
 
@@ -230,7 +229,7 @@ class Command(BaseCommand):
         """
         send_expiry_email_again = True
         email_duration = email_config['resend_days'] * (email_config['default_emails'] - 1)
-        days_since_expiry = (now() - verification.expiry_date).days
+        days_since_expiry = (now() - verification.expiration_datetime).days
 
         if days_since_expiry >= email_duration:
             send_expiry_email_again = False

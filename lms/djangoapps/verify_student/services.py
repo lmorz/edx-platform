@@ -146,7 +146,7 @@ class IDVerificationService(object):
         filter_kwargs = {
             'user': user,
             'status__in': ['submitted', 'approved', 'must_retry'],
-            'created_at__gte': earliest_allowed_verification_date()
+            'expiration_datetime__gte': earliest_allowed_verification_date()
         }
 
         return (
@@ -199,7 +199,7 @@ class IDVerificationService(object):
             return user_status
 
         user_status['should_display'] = attempt.should_display_status_to_user()
-        if attempt.created_at < earliest_allowed_verification_date():
+        if attempt.expiration_datetime < earliest_allowed_verification_date():
             if user_status['should_display']:
                 user_status['status'] = 'expired'
                 user_status['error'] = _(u"Your {platform_name} verification has expired.").format(
@@ -219,8 +219,8 @@ class IDVerificationService(object):
         elif attempt.status == 'approved':
             user_status['status'] = 'approved'
             expiration_datetime = cls.get_expiration_datetime(user, ['approved'])
-            if getattr(attempt, 'expiry_date', None) and is_verification_expiring_soon(expiration_datetime):
-                user_status['verification_expiry'] = attempt.expiry_date.date().strftime("%m/%d/%Y")
+            if is_verification_expiring_soon(expiration_datetime):
+                user_status['verification_expiry'] = attempt.expiration_datetime.date().strftime("%m/%d/%Y")
             user_status['status_date'] = attempt.status_changed
 
         elif attempt.status in ['submitted', 'approved', 'must_retry']:
