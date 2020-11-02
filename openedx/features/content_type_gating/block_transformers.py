@@ -6,6 +6,7 @@ Limits access for certain users to certain types of content.
 
 from django.conf import settings
 
+from lms.djangoapps.course_blocks.transformers.user_partitions import UserPartitionTransformer
 from openedx.core.djangoapps.content.block_structure.transformer import BlockStructureTransformer
 from openedx.features.content_type_gating.helpers import CONTENT_GATING_PARTITION_ID
 from openedx.features.content_type_gating.models import ContentTypeGatingConfig
@@ -61,7 +62,8 @@ class ContentTypeGateTransformer(BlockStructureTransformer):
             weight_not_zero = block_structure.get_xblock_field(block_key, 'weight') != 0
             problem_eligible_for_content_gating = graded and has_score and weight_not_zero
             if problem_eligible_for_content_gating:
-                current_access = block_structure.get_xblock_field(block_key, 'group_access')
+                merged_access = block_structure.get_transformer_block_field(block_key, UserPartitionTransformer, 'merged_group_access', None)
+                current_access = merged_access.get_allowed_groups() if merged_access else block_structure.get_xblock_field(block_key, 'group_access')
                 if current_access is None:
                     current_access = {}
                 current_access.setdefault(
