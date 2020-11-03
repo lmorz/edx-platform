@@ -33,7 +33,7 @@ import capa.responsetypes as responsetypes
 import capa.xqueue_interface as xqueue_interface
 from capa.correctmap import CorrectMap
 from capa.safe_exec import safe_exec
-from capa.util import contextualize_text, convert_files_to_filenames
+from capa.util import contextualize_text, convert_files_to_filenames, get_course_id_from_capa_module
 from openedx.core.djangolib.markup import HTML, Text
 from openedx.core.lib.edx_six import get_gettext
 from xmodule.stringify import stringify_children
@@ -914,16 +914,6 @@ class LoncapaProblem(object):
             code = unescape(script.text, XMLESC)
             all_code += code
 
-        # We allow context-specific overrides for limits in the safe executation environment.
-        # If available, we use this block's stringified course key to identify the set
-        # of overrides we want to use, allowing us to tweak limits for particular course
-        # runs via Django settings.
-        # If the course key is not available, fall back to None (no overrides).
-        try:
-            limit_overrides_context = str(self.capa_module.scope_ids.usage_id.course_key)
-        except AttributeError:
-            limit_overrides_context = None
-
         extra_files = []
         if all_code:
             # An asset named python_lib.zip can be imported by Python code.
@@ -940,7 +930,9 @@ class LoncapaProblem(object):
                     python_path=python_path,
                     extra_files=extra_files,
                     cache=self.capa_system.cache,
-                    limit_overrides_context=limit_overrides_context,
+                    limit_overrides_context=get_course_id_from_capa_module(
+                        self.capa_module
+                    ),
                     slug=self.problem_id,
                     unsafely=self.capa_system.can_execute_unsafe_code(),
                 )
