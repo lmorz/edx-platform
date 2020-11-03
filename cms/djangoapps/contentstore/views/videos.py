@@ -40,6 +40,9 @@ from edxval.api import (
 )
 from opaque_keys.edx.keys import CourseKey
 from pytz import UTC
+from rest_framework import status as rest_status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 from edx_toggles.toggles import WaffleFlagNamespace, WaffleSwitchNamespace
 from edxmako.shortcuts import render_to_response
@@ -51,9 +54,6 @@ from openedx.core.djangoapps.video_pipeline.config.waffle import (
 )
 from openedx.core.djangoapps.waffle_utils import CourseWaffleFlag
 from openedx.core.lib.api.view_utils import view_auth_classes
-from rest_framework import status as rest_status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from util.json_request import JsonResponse, expect_json
 from xmodule.video_module.transcripts_utils import Transcript
 
@@ -260,6 +260,10 @@ def videos_handler(request, course_key_string, edx_video_id=None):
 @view_auth_classes()
 @expect_json
 def create_video_upload_view(request, course_key_string):
+    """
+    API for creating a video upload.  Returns an edx_video_id and a presigned URL that can be used
+    to upload the video to AWS S3.
+    """
     course = _get_and_validate_course(course_key_string, request.user)
     if not course:
         return Response(data='Course Not Found', status=rest_status.HTTP_400_BAD_REQUEST)
@@ -766,7 +770,7 @@ def videos_post(course, request):
     if error:
         return {'error': error}, 400
 
-    bucket = storage_service_bucket(course.id)
+    bucket = storage_service_bucket()
     req_files = data['files']
     resp_files = []
 
@@ -824,7 +828,7 @@ def videos_post(course, request):
     return {'files': resp_files}, 200
 
 
-def storage_service_bucket(course_key=None):
+def storage_service_bucket():
     """
     Returns an S3 bucket for video upload. The S3 bucket returned depends on
     which pipeline, VEDA or VEM, is enabled.
