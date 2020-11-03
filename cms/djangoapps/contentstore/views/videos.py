@@ -50,6 +50,10 @@ from openedx.core.djangoapps.video_pipeline.config.waffle import (
     waffle_flags
 )
 from openedx.core.djangoapps.waffle_utils import CourseWaffleFlag
+from openedx.core.lib.api.view_utils import view_auth_classes
+from rest_framework import status as rest_status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from util.json_request import JsonResponse, expect_json
 from xmodule.video_module.transcripts_utils import Transcript
 
@@ -63,6 +67,7 @@ __all__ = [
     'video_encodings_download',
     'video_images_handler',
     'transcript_preferences_handler',
+    'create_video_upload_view',
 ]
 
 LOGGER = logging.getLogger(__name__)
@@ -247,7 +252,20 @@ def videos_handler(request, course_key_string, edx_video_id=None):
         elif _is_pagination_context_update_request(request):
             return _update_pagination_context(request)
 
-        return videos_post(course, request)
+        data, status = videos_post(course, request)
+        return JsonResponse(data, status=status)
+
+
+@api_view(['POST'])
+@view_auth_classes()
+@expect_json
+def create_video_upload_view(request, course_key_string):
+    course = _get_and_validate_course(course_key_string, request.user)
+    if not course:
+        return Response(data='Course Not Found', status=rest_status.HTTP_400_BAD_REQUEST)
+
+    data, status = videos_post(course, request)
+    return Response(data, status=status)
 
 
 @expect_json
@@ -746,7 +764,7 @@ def videos_post(course, request):
         error = "Request 'files' entry contain unsupported content_type"
 
     if error:
-        return JsonResponse({'error': error}, status=400)
+        return {'error': error}, 400
 
     bucket = storage_service_bucket(course.id)
     req_files = data['files']
@@ -759,7 +777,7 @@ def videos_post(course, request):
             file_name.encode('ascii')
         except UnicodeEncodeError:
             error_msg = u'The file name for %s must contain only ASCII characters.' % file_name
-            return JsonResponse({'error': error_msg}, status=400)
+            return {'error': error_msg}, 400
 
         edx_video_id = six.text_type(uuid4())
         key = storage_service_key(bucket, file_name=edx_video_id)
@@ -803,7 +821,7 @@ def videos_post(course, request):
 
         resp_files.append({'file_name': file_name, 'upload_url': upload_url, 'edx_video_id': edx_video_id})
 
-    return JsonResponse({'files': resp_files}, status=200)
+    return {'files': resp_files}, 200
 
 
 def storage_service_bucket(course_key=None):

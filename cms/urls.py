@@ -154,6 +154,8 @@ urlpatterns = [
         contentstore_views.textbooks_detail_handler, name='textbooks_detail_handler'),
     url(r'^videos/{}(?:/(?P<edx_video_id>[-\w]+))?$'.format(settings.COURSE_KEY_PATTERN),
         contentstore_views.videos_handler, name='videos_handler'),
+    url(r'^create_video_upload/{}'.format(settings.COURSE_KEY_PATTERN),
+        contentstore_views.create_video_upload_view, name='create_video_upload'),
     url(r'^video_images/{}(?:/(?P<edx_video_id>[-\w]+))?$'.format(settings.COURSE_KEY_PATTERN),
         contentstore_views.video_images_handler, name='video_images_handler'),
     url(r'^transcript_preferences/{}$'.format(settings.COURSE_KEY_PATTERN),
