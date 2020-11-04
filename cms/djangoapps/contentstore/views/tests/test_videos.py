@@ -254,6 +254,8 @@ class VideoUploadPostTestsMixin(object):
         )
         self.assertEqual(response.status_code, 200)
         response_obj = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(False, True)
+
 
         mock_conn.assert_called_once_with(
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
@@ -859,13 +861,17 @@ class VideosHandlerTestCase(VideoUploadTestMixin, VideoUploadPostTestsMixin, Cou
 @override_settings(VIDEO_UPLOAD_PIPELINE={
     "VEM_S3_BUCKET": "vem_test_bucket", "BUCKET": "test_bucket", "ROOT_PATH": "test_root"
 })
-class CreateVideoUploadTestCase(VideoUploadTestBase, VideoUploadPostTestsMixin, CourseTestCase):
-    """Test cases for the main video upload endpoint"""
+class GenerateVideoUploadLinkTestCase(VideoUploadTestBase, VideoUploadPostTestsMixin, CourseTestCase):
+    """
+    Test cases for the main video upload endpoint
+    """
 
-    VIEW_NAME = 'create_video_upload'
+    VIEW_NAME = 'generate_video_upload_link'
 
     def test_unsupported_requests_fail(self):
-        # The API only supports post, make sure other requests fail
+        """
+        The API only supports post, make sure other requests fail
+        """
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 405)
 

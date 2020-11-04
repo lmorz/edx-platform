@@ -67,7 +67,7 @@ __all__ = [
     'video_encodings_download',
     'video_images_handler',
     'transcript_preferences_handler',
-    'create_video_upload_view',
+    'generate_video_upload_link_handler',
 ]
 
 LOGGER = logging.getLogger(__name__)
@@ -259,7 +259,7 @@ def videos_handler(request, course_key_string, edx_video_id=None):
 @api_view(['POST'])
 @view_auth_classes()
 @expect_json
-def create_video_upload_view(request, course_key_string):
+def generate_video_upload_link_handler(request, course_key_string):
     """
     API for creating a video upload.  Returns an edx_video_id and a presigned URL that can be used
     to upload the video to AWS S3.
