@@ -456,7 +456,7 @@ class TestCourseStatusGET(CourseStatusAPITestCase, MobileAuthUserTestMixin,
     def test_success(self):
         self.login_and_enroll()
 
-        response = self.api_response()
+        response = self.api_response(api_version=API_V05)
         self.assertEqual(
             response.data["last_visited_module_id"],
             six.text_type(self.sub_section.location)

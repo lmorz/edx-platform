@@ -205,7 +205,7 @@ class UserCourseStatus(views.APIView):
         except UnavailableCompletionData:
             block_id = ''
 
-        return Response({"block_id": block_id})
+        return Response({"last_visited_block_id": block_id})
 
     @mobile_course_access(depth=2)
     def patch(self, request, course, *args, **kwargs):
